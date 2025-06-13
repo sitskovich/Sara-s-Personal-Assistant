@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sara's Personal AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('data:image/jpeg;base64,') center/cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* Fallback for when image isn't loaded */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #27ae60 100%);
+            z-index: -2;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(52, 73, 94, 0.1) 0%, rgba(52, 152, 219, 0.1) 100%);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .ai-banner {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .ai-banner button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-banner button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .chatgpt-button {
+            background: linear-gradient(135deg, #00d4aa 0%, #0066cc 100%) !important;
+            border: 1px solid rgba(0, 212, 170, 0.5) !important;
+            box-shadow: 0 0 15px rgba(0, 212, 170, 0.3);
+            font-weight: 600;
+        }
+        
+        .chatgpt-button:hover {
+            background: linear-gradient(135deg, #00e6bb 0%, #0077dd 100%) !important;
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.5);
+            transform: translateY(-2px) !important;
+        }
+        
+        .claude-button {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%) !important;
+            border: 1px solid rgba(255, 107, 53, 0.5) !important;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+            font-weight: 600;
+        }
+        
+        .claude-button:hover {
+            background: linear-gradient(135deg, #ff7b45 0%, #ff9f2e 100%) !important;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+            transform: translateY(-2px) !important;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .big-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .big-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        }
+        
+        .big-button.emails {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .big-button.tenants {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .big-button.vendors {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .big-button.documentation {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+        
+        .big-button.financial {
+            background: linear-gradient(135deg, #27ae60, #219a52);
+        }
+        
+        .big-button.phone {
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+        }
+        
+        .back-button {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: #7f8c8d;
+            transform: translateY(-1px);
+        }
+        
+        .prompt-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .prompt-item {
+            background: rgba(248, 249, 250, 0.95);
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .prompt-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .prompt-item-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .prompt-item-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            padding-right: 40px;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .close:hover {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .prompt-text-modal {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .prompt-text-modal select {
+            background: #3498db;
+            color: white;
+            border: 1px solid #2980b9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin: 0 2px;
+            font-weight: 600;
+        }
+        
+        .prompt-text-modal select:focus {
+            outline: 2px solid #f39c12;
+            outline-offset: 1px;
+        }
+        
+        .example-text-modal {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 15px;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        .copy-button-modal {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .copy-button-modal:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .cancel-button-modal {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .cancel-button-modal:hover {
+            background: #7f8c8d;
+        }
+        
+        .success-message-modal {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .icon {
+            font-size: 28px;
+        }
+        
+        .tips-banner {
+            background: rgba(52, 152, 219, 0.1);
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .tips-banner h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .big-button {
+                font-size: 16px;
+                padding: 25px;
+                min-height: 100px;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .prompt-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Sara's Personal AI Assistant</h1>
+            <p>Your intelligent property management assistant - Professional prompts for every situation</p>
+        </div>
+        
+        <div class="ai-banner">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <span style="margin-right: 10px;">🚀 AI Tools:</span>
+                <button onclick="openChatGPT()" class="chatgpt-button">Open ChatGPT</button>
+                <button onclick="openClaude()" class="claude-button">Open Claude</button>
+            </div>
+            <div style="text-align: center;">
+                <span style="margin-right: 10px;">💡 Pro Tip:</span>
+                <span style="font-size: 14px;">Click any title below to see the full prompt with dropdown options!</span>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Home Section -->
+            <div id="home" class="section active">
+                <div class="tips-banner">
+                    <h3>How Sara's AI Assistant Works</h3>
+                    <p>1. Choose your challenge → 2. Click a prompt title → 3. Select from dropdown menus → 4. Copy & use in AI!</p>
+                </div>
+                
+                <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Select Your Property Management Need</h2>
+                <div class="button-grid">
+                    <button class="big-button emails" onclick="showCategory('emails')">
+                        <span class="icon">📧</span>
+                        <div>Email Communications</div>
+                        <small>Tenants, vendors, owners, confirmations</small>
+                    </button>
+                    <button class="big-button tenants" onclick="showCategory('tenants')">
+                        <span class="icon">🏠</span>
+                        <div>Tenant Relations</div>
+                        <small>Issues, violations, move-outs, complaints</small>
+                    </button>
+                    <button class="big-button vendors" onclick="showCategory('vendors')">
+                        <span class="icon">🔧</span>
+                        <div>Vendor & Maintenance</div>
+                        <small>Work orders, quotes, scheduling, quality control</small>
+                    </button>
+                    <button class="big-button documentation" onclick="showCategory('documentation')">
+                        <span class="icon">📋</span>
+                        <div>Documentation & Reports</div>
+                        <small>Inspections, incidents, owner reports</small>
+                    </button>
+                    <button class="big-button financial" onclick="showCategory('financial')">
+                        <span class="icon">💰</span>
+                        <div>Financial & Legal</div>
+                        <small>Rent collection, evictions, compliance</small>
+                    </button>
+                    <button class="big-button phone" onclick="showCategory('phone')">
+                        <span class="icon">📞</span>
+                        <div>Phone Scripts</div>
+                        <small>Difficult calls, negotiations, emergencies</small>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Category Sections -->
+            <div id="emails" class="section">
+                <button class="back-button" onclick="showSection('home')">← Back to Categories</button>
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">📧 Email Communications</h2>
+                <div id="emails-content" class="prompt-list"></div>
+            </div>
+            
+            <div id="tenants" class="section">
+                <button class="back-button" onclick="showSection('home')">← Back to Categories</button>
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">🏠 Tenant Relations & Issues</h2>
+                <div id="tenants-content" class="prompt-list"></div>
+            </div>
+            
+            <div id="vendors" class="section">
+                <button class="back-button" onclick="showSection('home')">← Back to Categories</button>
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">🔧 Vendor & Maintenance Management</h2>
+                <div id="vendors-content" class="prompt-list"></div>
+            </div>
+            
+            <div id="documentation" class="section">
+                <button class="back-button" onclick="showSection('home')">← Back to Categories</button>
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">📋 Documentation & Reporting</h2>
+                <div id="documentation-content" class="prompt-list"></div>
+            </div>
+            
+            <div id="financial" class="section">
+                <button class="back-button" onclick="showSection('home')">← Back to Categories</button>
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">💰 Financial & Legal Management</h2>
+                <div id="financial-content" class="prompt-list"></div>
+            </div>
+            
+            <div id="phone" class="section">
+                <button class="back-button" onclick="showSection('home')">← Back to Categories</button>
+                <h2 style="margin-bottom: 30px; color: #2c3e50;">📞 Phone Scripts & Conversations</h2>
+                <div id="phone-content" class="prompt-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="promptModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle"></h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="modalPromptText" class="prompt-text-modal"></div>
+                <div id="modalExample" class="example-text-modal"></div>
+                <div class="modal-buttons">
+                    <button class="cancel-button-modal" onclick="closeModal()">Cancel</button>
+                    <button class="copy-button-modal" onclick="copyModalPrompt()">📋 Copy This Prompt</button>
+                </div>
+                <div id="modalSuccessMessage" class="success-message-modal">✅ Copied! Now paste into ChatGPT or Claude</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPromptText = '';
+        
+        // Property management prompt data with embedded dropdown menus
+        const propertyPrompts = {
+            'emails': [
+                {
+                    title: "🏖️ Time Off Request Email",
+                    description: "Request PTO, vacation, or personal time off with proper coverage planning",
+                    prompt: `Draft a professional time off request email for <select onchange="updatePromptText()"><option value="">TIME PERIOD</option><option value="specific dates next month">specific dates next month</option><option value="one week in summer">one week in summer</option><option value="holiday period">holiday period</option><option value="personal days">personal days</option></select>. The purpose is <select onchange="updatePromptText()"><option value="">REASON FOR TIME OFF</option><option value="family vacation">family vacation</option><option value="medical appointment">medical appointment</option><option value="personal matter">personal matter</option><option value="wedding/event">wedding/event</option></select> and I have arranged for <select onchange="updatePromptText()"><option value="">COVERAGE PLAN</option><option value="coworker handling emergencies">coworker handling emergencies</option><option value="supervisor taking calls">supervisor taking calls</option><option value="automated systems in place">automated systems in place</option><option value="vendor contacts available">vendor contacts available</option></select>. I am providing <select onchange="updatePromptText()"><option value="">ADVANCE NOTICE</option><option value="2 weeks advance notice">2 weeks advance notice</option><option value="1 month advance notice">1 month advance notice</option><option value="6 weeks advance notice">6 weeks advance notice</option><option value="following company policy">following company policy</option></select>. Include proper business formatting, clear subject line, and demonstrate advance planning and responsibility.`,
+                    example: "Draft a professional time off request email for specific dates next month. The purpose is family vacation and I have arranged for coworker handling emergencies. I am providing 2 weeks advance notice."
+                },
+                {
+                    title: "🤒 Sick Day/Emergency Time Off Email",
+                    description: "Last-minute illness or emergency time off notification with coverage details",
+                    prompt: `Write a sick day notification email due to <select onchange="updatePromptText()"><option value="">REASON FOR ABSENCE</option><option value="illness/flu symptoms">illness/flu symptoms</option><option value="family emergency">family emergency</option><option value="medical appointment">medical appointment</option><option value="personal emergency">personal emergency</option></select>. I expect to be out for <select onchange="updatePromptText()"><option value="">EXPECTED DURATION</option><option value="today only">today only</option><option value="2-3 days">2-3 days</option><option value="rest of week">rest of week</option><option value="uncertain timeline">uncertain timeline</option></select>. The urgent items scheduled for today include <select onchange="updatePromptText()"><option value="">URGENT TASKS</option><option value="tenant appointments">tenant appointments</option><option value="vendor meetings">vendor meetings</option><option value="emergency calls">emergency calls</option><option value="inspection scheduled">inspection scheduled</option></select> and I have arranged for <select onchange="updatePromptText()"><option value="">COVERAGE ARRANGEMENT</option><option value="coworker has keys">coworker has keys</option><option value="supervisor handling calls">supervisor handling calls</option><option value="emergency contacts provided">emergency contacts provided</option><option value="vendor rescheduled">vendor rescheduled</option></select>. Make it professional, brief, and include emergency contact information.`,
+                    example: "Write a sick day notification email due to illness/flu symptoms. I expect to be out for 2-3 days. The urgent items scheduled for today include tenant appointments and I have arranged for coworker has keys."
+                },
+                {
+                    title: "📬 Professional Tenant Communication Email",
+                    description: "Professional emails to tenants about rent, violations, maintenance, or general issues",
+                    prompt: `Draft a professional tenant email regarding <select onchange="updatePromptText()"><option value="">ISSUE TYPE</option><option value="late rent payment">late rent payment</option><option value="lease violation">lease violation</option><option value="maintenance request">maintenance request</option><option value="noise complaint">noise complaint</option><option value="property damage">property damage</option></select>. This is a <select onchange="updatePromptText()"><option value="">SITUATION CONTEXT</option><option value="first occurrence">first occurrence</option><option value="repeated issue">repeated issue</option><option value="emergency situation">emergency situation</option><option value="routine matter">routine matter</option></select> that requires a <select onchange="updatePromptText()"><option value="">COMMUNICATION TONE</option><option value="friendly reminder">friendly reminder</option><option value="firm but professional">firm but professional</option><option value="urgent notice">urgent notice</option><option value="legal compliance">legal compliance</option></select> approach. The tenant needs to <select onchange="updatePromptText()"><option value="">REQUIRED ACTION</option><option value="immediate payment">make immediate payment</option><option value="violation correction">correct the violation</option><option value="access for repairs">provide access for repairs</option><option value="neighbor consideration">show neighbor consideration</option></select>. Include proper legal language, clear expectations, deadlines, and consequences if applicable.`,
+                    example: "Draft a professional tenant email regarding late rent payment. This is a repeated issue that requires a firm but professional approach. The tenant needs to make immediate payment."
+                },
+                {
+                    title: "🔨 Vendor Quote Request Email",
+                    description: "Request quotes from contractors and vendors for maintenance and repairs",
+                    prompt: `Write a vendor quote request for <select onchange="updatePromptText()"><option value="">SERVICE TYPE</option><option value="plumbing repair">plumbing repair</option><option value="electrical work">electrical work</option><option value="HVAC service">HVAC service</option><option value="flooring replacement">flooring replacement</option><option value="exterior painting">exterior painting</option></select> at <select onchange="updatePromptText()"><option value="">WORK LOCATION</option><option value="specific unit">specific unit</option><option value="common area">common area</option><option value="exterior building">exterior building</option><option value="multiple units">multiple units</option></select>. This is an <select onchange="updatePromptText()"><option value="">WORK SCOPE</option><option value="emergency repair">emergency repair</option><option value="routine maintenance">routine maintenance</option><option value="full replacement">full replacement</option><option value="preventive service">preventive service</option></select> needed <select onchange="updatePromptText()"><option value="">TIMELINE</option><option value="immediately">immediately</option><option value="within 1 week">within 1 week</option><option value="within 1 month">within 1 month</option><option value="scheduled maintenance">for scheduled maintenance</option></select>. My budget approach is <select onchange="updatePromptText()"><option value="">BUDGET CONTEXT</option><option value="emergency pricing accepted">emergency pricing accepted</option><option value="competitive quotes needed">competitive quotes needed</option><option value="budget-conscious">budget-conscious</option><option value="quality focused">quality focused</option></select>. Include request for detailed breakdown, timeline, warranty information, and references.`,
+                    example: "Write a vendor quote request for plumbing repair at specific unit. This is an emergency repair needed immediately. My budget approach is emergency pricing accepted."
+                },
+                {
+                    title: "📊 Owner/Boss Update Email",
+                    description: "Regular updates to property owners or supervisors about property status and issues",
+                    prompt: `Create a professional update email about the <select onchange="updatePromptText()"><option value="">SITUATION TYPE</option><option value="maintenance issue">maintenance issue</option><option value="tenant situation">tenant situation</option><option value="financial performance">financial performance</option><option value="emergency repair">emergency repair</option></select> we're currently handling. The current status is <select onchange="updatePromptText()"><option value="">PROJECT STATUS</option><option value="problem identified">problem identified</option><option value="work in progress">work in progress</option><option value="awaiting approval">awaiting approval</option><option value="completed successfully">completed successfully</option></select> with <select onchange="updatePromptText()"><option value="">FINANCIAL IMPACT</option><option value="immediate cost concern">immediate cost concern</option><option value="budget variance">budget variance</option><option value="revenue impact">revenue impact</option><option value="long-term savings potential">long-term savings potential</option></select>. My recommendation is to <select onchange="updatePromptText()"><option value="">RECOMMENDED ACTION</option><option value="approve repair">approve repair</option><option value="investigate further">investigate further</option><option value="implement preventive measures">implement preventive measures</option><option value="consider alternatives">consider alternatives</option></select>. Format as executive summary with clear action items and decision points required.`,
+                    example: "Create a professional update email about the maintenance issue we're currently handling. The current status is problem identified with immediate cost concern. My recommendation is to approve repair."
+                },
+                {
+                    title: "💰 Expense Approval Request Email",
+                    description: "Request approval for repairs, purchases, or emergency expenses",
+                    prompt: `Request approval for <select onchange="updatePromptText()"><option value="">EXPENSE TYPE</option><option value="emergency repair">emergency repair</option><option value="routine maintenance">routine maintenance</option><option value="equipment purchase">equipment purchase</option><option value="property improvement">property improvement</option></select> with a cost of <select onchange="updatePromptText()"><option value="">COST RANGE</option><option value="under $500">under $500</option><option value="$500-$2000">$500-$2000</option><option value="$2000-$5000">$2000-$5000</option><option value="over $5000">over $5000</option></select>. This expense is justified due to <select onchange="updatePromptText()"><option value="">JUSTIFICATION</option><option value="safety concern">safety concern</option><option value="prevent further damage">need to prevent further damage</option><option value="tenant satisfaction">tenant satisfaction requirements</option><option value="property value">property value protection</option></select> and requires <select onchange="updatePromptText()"><option value="">URGENCY LEVEL</option><option value="immediate action">immediate action</option><option value="action within 48 hours">action within 48 hours</option><option value="action within 1 week">action within 1 week</option><option value="planned expense timing">planned expense timing</option></select>. Include cost comparison, impact of delaying, and professional vendor information. Format for quick executive decision-making.`,
+                    example: "Request approval for emergency repair with a cost of $500-$2000. This expense is justified due to safety concern and requires immediate action."
+                }
+            ],
+            'tenants': [
+                {
+                    title: "🏠 Tenant Complaint Resolution",
+                    description: "Address and resolve various tenant complaints professionally and effectively",
+                    prompt: `Help me resolve a tenant complaint about <select onchange="updatePromptText()"><option value="">COMPLAINT TYPE</option><option value="noisy neighbors">noisy neighbors</option><option value="maintenance issues">maintenance issues</option><option value="parking problems">parking problems</option><option value="building conditions">building conditions</option><option value="other tenant behavior">other tenant behavior</option></select>. This situation has been <select onchange="updatePromptText()"><option value="">SITUATION TIMELINE</option><option value="ongoing for weeks">ongoing for weeks</option><option value="recent development">a recent development</option><option value="emergency situation">an emergency situation</option><option value="documented incidents">documented through multiple incidents</option></select>. My previous attempts included <select onchange="updatePromptText()"><option value="">PREVIOUS ATTEMPTS</option><option value="informal conversation">informal conversation</option><option value="written notice">written notice</option><option value="mediation attempt">mediation attempt</option><option value="no action yet">no action yet</option></select> and I'm hoping to achieve <select onchange="updatePromptText()"><option value="">DESIRED OUTCOME</option><option value="peaceful resolution">peaceful resolution</option><option value="policy enforcement">policy enforcement</option><option value="tenant retention">tenant retention</option><option value="legal compliance">legal compliance</option></select>. Provide step-by-step approach, communication scripts, and documentation requirements.`,
+                    example: "Help me resolve a tenant complaint about noisy neighbors. This situation has been ongoing for weeks. My previous attempts included informal conversation and I'm hoping to achieve peaceful resolution."
+                },
+                {
+                    title: "📋 Lease Violation Documentation",
+                    description: "Properly document and address lease violations with legal compliance",
+                    prompt: `Guide me through documenting <select onchange="updatePromptText()"><option value="">VIOLATION TYPE</option><option value="unauthorized pet">unauthorized pet</option><option value="subletting">subletting</option><option value="property damage">property damage</option><option value="noise violations">noise violations</option><option value="occupancy limits">occupancy limits</option></select> at <select onchange="updatePromptText()"><option value="">VIOLATION LOCATION</option><option value="specific unit number">specific unit number</option><option value="common area">common area</option><option value="parking area">parking area</option><option value="multiple locations">multiple locations</option></select>. I have collected <select onchange="updatePromptText()"><option value="">EVIDENCE COLLECTED</option><option value="photos and documentation">photos and documentation</option><option value="witness statements">witness statements</option><option value="written complaints">written complaints</option><option value="inspection reports">inspection reports</option></select> and this tenant has <select onchange="updatePromptText()"><option value="">VIOLATION HISTORY</option><option value="first violation">first violation</option><option value="repeated offenses">repeated offenses</option><option value="escalating behavior">escalating behavior</option><option value="good tenant otherwise">been a good tenant otherwise</option></select>. I need to comply with <select onchange="updatePromptText()"><option value="">LEGAL REQUIREMENTS</option><option value="state notice requirements">state notice requirements</option><option value="cure period">cure period</option><option value="proper service">proper service</option><option value="court preparation">court preparation</option></select>. Include proper legal procedures, required notices, timelines, and documentation format.`,
+                    example: "Guide me through documenting unauthorized pet at specific unit number. I have collected photos and documentation and this tenant has first violation. I need to comply with state notice requirements."
+                },
+                {
+                    title: "🚪 Move-out Process Management",
+                    description: "Manage tenant move-outs, inspections, and security deposit handling",
+                    prompt: `Manage move-out process for the <select onchange="updatePromptText()"><option value="">UNIT TYPE</option><option value="studio apartment">studio apartment</option><option value="1-bedroom unit">1-bedroom unit</option><option value="2-bedroom unit">2-bedroom unit</option><option value="house rental">house rental</option></select> with a move-out date at <select onchange="updatePromptText()"><option value="">MOVE-OUT TIMING</option><option value="end of month">end of month</option><option value="mid-month">mid-month</option><option value="emergency move-out">emergency move-out</option><option value="planned departure">planned departure</option></select>. This tenant has been <select onchange="updatePromptText()"><option value="">TENANT CLASSIFICATION</option><option value="excellent tenant">an excellent tenant</option><option value="good tenant">a good tenant</option><option value="problematic tenant">a problematic tenant</option><option value="new tenant">a new tenant</option></select> and my main concerns involve <select onchange="updatePromptText()"><option value="">EXPECTED CONCERNS</option><option value="normal wear assessment">normal wear assessment</option><option value="damage evaluation">damage evaluation</option><option value="cleaning requirements">cleaning requirements</option><option value="key return">key return</option></select>. Provide detailed checklist, inspection criteria, security deposit calculations, and legal compliance requirements.`,
+                    example: "Manage move-out process for the 1-bedroom unit with a move-out date at end of month. This tenant has been a good tenant and my main concerns involve normal wear assessment."
+                },
+                {
+                    title: "💰 Rent Collection Strategy",
+                    description: "Develop effective approaches for collecting overdue rent payments",
+                    prompt: `Develop rent collection strategy for a <select onchange="updatePromptText()"><option value="">TENANT PATTERN</option><option value="first-time late">first-time late</option><option value="occasionally late">occasionally late</option><option value="chronically late">chronically late</option><option value="financial hardship">financial hardship</option></select> tenant who owes <select onchange="updatePromptText()"><option value="">DEBT AMOUNT</option><option value="partial payment">partial payment</option><option value="one month">one month</option><option value="two months">two months</option><option value="three or more months">three or more months</option></select> and is currently <select onchange="updatePromptText()"><option value="">TIMELINE STATUS</option><option value="just overdue">just overdue</option><option value="1-2 weeks late">1-2 weeks late</option><option value="3-4 weeks late">3-4 weeks late</option><option value="over 30 days">over 30 days</option></select>. This tenant has been <select onchange="updatePromptText()"><option value="">PAYMENT HISTORY</option><option value="usually reliable">usually reliable</option><option value="mixed record">mixed record</option><option value="frequent problems">frequent problems</option><option value="new tenant">a new tenant</option></select> in the past. Provide escalation steps, legal options, communication scripts, and timeline for each action.`,
+                    example: "Develop rent collection strategy for a first-time late tenant who owes one month and is currently 1-2 weeks late. This tenant has been usually reliable in the past."
+                },
+                {
+                    title: "🤝 Tenant Conflict Mediation",
+                    description: "Mediate disputes between tenants to maintain peaceful community",
+                    prompt: `Help mediate conflict about <select onchange="updatePromptText()"><option value="">CONFLICT ISSUE</option><option value="noise complaints">noise complaints</option><option value="parking disputes">parking disputes</option><option value="shared space issues">shared space issues</option><option value="personal conflicts">personal conflicts</option></select>. The parties involved are <select onchange="updatePromptText()"><option value="">PARTIES INVOLVED</option><option value="neighboring units">neighboring units</option><option value="upstairs/downstairs">upstairs/downstairs</option><option value="multiple tenants">multiple tenants</option><option value="tenant and visitor">tenant and visitor</option></select> and the root cause appears to be <select onchange="updatePromptText()"><option value="">ROOT CAUSE</option><option value="lifestyle differences">lifestyle differences</option><option value="property boundaries">property boundaries</option><option value="communication breakdown">communication breakdown</option><option value="escalating tensions">escalating tensions</option></select>. I plan to use an <select onchange="updatePromptText()"><option value="">MEDIATION APPROACH</option><option value="informal discussion">informal discussion</option><option value="structured meeting">structured meeting</option><option value="written agreements">written agreements</option><option value="third-party assistance">third-party assistance</option></select> approach. Provide neutral mediation approach, communication guidelines, and potential compromise solutions.`,
+                    example: "Help mediate conflict about noise complaints. The parties involved are upstairs/downstairs and the root cause appears to be lifestyle differences. I plan to use an informal discussion approach."
+                }
+            ],
+            'vendors': [
+                {
+                    title: "🔧 Work Order Creation",
+                    description: "Create detailed work orders for maintenance and repair projects",
+                    prompt: `Create comprehensive work order for <select onchange="updatePromptText()"><option value="">WORK TYPE</option><option value="plumbing issue">plumbing issue</option><option value="electrical problem">electrical problem</option><option value="HVAC repair">HVAC repair</option><option value="appliance service">appliance service</option><option value="structural repair">structural repair</option></select> at <select onchange="updatePromptText()"><option value="">LOCATION</option><option value="specific unit">specific unit</option><option value="common area">common area</option><option value="exterior building">exterior building</option><option value="mechanical room">mechanical room</option></select>. This is an <select onchange="updatePromptText()"><option value="">URGENCY LEVEL</option><option value="emergency repair">emergency repair</option><option value="urgent priority">urgent priority</option><option value="routine maintenance">routine maintenance</option><option value="scheduled service">scheduled service</option></select> situation requiring <select onchange="updatePromptText()"><option value="">SCOPE OF WORK</option><option value="diagnostic and repair">diagnostic and repair</option><option value="replacement needed">replacement needed</option><option value="preventive maintenance">preventive maintenance</option><option value="full system service">full system service</option></select> to be completed <select onchange="updatePromptText()"><option value="">COMPLETION TIMELINE</option><option value="same day">same day</option><option value="within 24 hours">within 24 hours</option><option value="within 1 week">within 1 week</option><option value="scheduled appointment">scheduled appointment</option></select>. Include safety requirements, access instructions, and quality standards.`,
+                    example: "Create comprehensive work order for plumbing issue at specific unit. This is an emergency repair situation requiring diagnostic and repair to be completed same day."
+                },
+                {
+                    title: "💼 Vendor Performance Evaluation",
+                    description: "Assess contractor work quality and determine future working relationships",
+                    prompt: `Evaluate the <select onchange="updatePromptText()"><option value="">VENDOR TYPE</option><option value="plumbing contractor">plumbing contractor</option><option value="electrical contractor">electrical contractor</option><option value="HVAC service">HVAC service</option><option value="maintenance company">maintenance company</option></select> performance on the recent <select onchange="updatePromptText()"><option value="">PROJECT TYPE</option><option value="emergency repair">emergency repair</option><option value="routine maintenance">routine maintenance</option><option value="major renovation">major renovation</option><option value="ongoing service">ongoing service</option></select>. The work quality was <select onchange="updatePromptText()"><option value="">QUALITY RATING</option><option value="excellent work">excellent work</option><option value="good quality">good quality</option><option value="acceptable">acceptable</option><option value="below expectations">below expectations</option></select> and they performed <select onchange="updatePromptText()"><option value="">SCHEDULE PERFORMANCE</option><option value="ahead of schedule">ahead of schedule</option><option value="on time">on time</option><option value="slightly delayed">slightly delayed</option><option value="significantly late">significantly late</option></select>. Their communication level was <select onchange="updatePromptText()"><option value="">COMMUNICATION LEVEL</option><option value="highly professional">highly professional</option><option value="good communication">good communication</option><option value="adequate">adequate</option><option value="poor communication">poor communication</option></select>. Provide detailed assessment and recommendation for future projects.`,
+                    example: "Evaluate the plumbing contractor performance on the recent emergency repair. The work quality was excellent work and they performed on time. Their communication level was highly professional."
+                },
+                {
+                    title: "📞 Vendor Quote Comparison",
+                    description: "Compare multiple vendor quotes and make informed selection decisions",
+                    prompt: `Compare vendor quotes for the <select onchange="updatePromptText()"><option value="">PROJECT TYPE</option><option value="roof repair">roof repair</option><option value="flooring replacement">flooring replacement</option><option value="painting project">painting project</option><option value="landscaping work">landscaping work</option></select> project. My main selection criteria is <select onchange="updatePromptText()"><option value="">SELECTION PRIORITY</option><option value="lowest cost">lowest cost</option><option value="best quality">best quality</option><option value="fastest completion">fastest completion</option><option value="best warranty">best warranty</option></select> with <select onchange="updatePromptText()"><option value="">BUDGET APPROACH</option><option value="strict budget limits">strict budget limits</option><option value="competitive pricing">competitive pricing</option><option value="value for money">value for money</option><option value="cost plus quality">cost plus quality</option></select> in mind. The timeline requirements are <select onchange="updatePromptText()"><option value="">SCHEDULE NEEDS</option><option value="immediate start">immediate start</option><option value="flexible timing">flexible timing</option><option value="specific deadline">specific deadline</option><option value="off-season work">off-season work</option></select> and I expect <select onchange="updatePromptText()"><option value="">QUALITY STANDARDS</option><option value="basic service">basic service</option><option value="standard quality">standard quality</option><option value="premium work">premium work</option><option value="specialty expertise">specialty expertise</option></select>. Provide detailed analysis and recommendation with justification.`,
+                    example: "Compare vendor quotes for the roof repair project. My main selection criteria is best quality with value for money in mind. The timeline requirements are flexible timing and I expect premium work."
+                },
+                {
+                    title: "⏰ Preventive Maintenance Scheduling",
+                    description: "Plan and coordinate regular maintenance schedules across properties",
+                    prompt: `Plan preventive maintenance for the <select onchange="updatePromptText()"><option value="">SYSTEM TYPE</option><option value="HVAC systems">HVAC systems</option><option value="plumbing systems">plumbing systems</option><option value="electrical systems">electrical systems</option><option value="building exterior">building exterior</option><option value="appliances">appliances</option></select> at <select onchange="updatePromptText()"><option value="">PROPERTY SCOPE</option><option value="single unit">single unit</option><option value="entire building">entire building</option><option value="multiple properties">multiple properties</option><option value="common areas only">common areas only</option></select>. The maintenance should occur on a <select onchange="updatePromptText()"><option value="">MAINTENANCE SCHEDULE</option><option value="monthly service">monthly service</option><option value="quarterly inspections">quarterly inspections</option><option value="bi-annual service">bi-annual service</option><option value="annual maintenance">annual maintenance</option></select> basis using a <select onchange="updatePromptText()"><option value="">TECHNICIAN REQUIREMENTS</option><option value="certified technician">certified technician</option><option value="licensed contractor">licensed contractor</option><option value="manufacturer service">manufacturer service</option><option value="general maintenance">general maintenance</option></select>. Tenant coordination will require <select onchange="updatePromptText()"><option value="">ACCESS COORDINATION</option><option value="minimal tenant notice">minimal tenant notice</option><option value="scheduled appointments">scheduled appointments</option><option value="emergency access">emergency access</option><option value="vacant unit access">vacant unit access</option></select>. Create comprehensive schedule with tenant notifications and vendor coordination.`,
+                    example: "Plan preventive maintenance for the HVAC systems at entire building. The maintenance should occur on a quarterly inspections basis using a certified technician. Tenant coordination will require scheduled appointments."
+                }
+            ],
+            'documentation': [
+                {
+                    title: "📋 Property Inspection Reports",
+                    description: "Create comprehensive inspection reports for various property assessments",
+                    prompt: `Create detailed inspection report for <select onchange="updatePromptText()"><option value="">PROPERTY SCOPE</option><option value="single unit">single unit</option><option value="multi-unit building">multi-unit building</option><option value="common areas">common areas</option><option value="entire property">entire property</option></select>. This is a <select onchange="updatePromptText()"><option value="">INSPECTION TYPE</option><option value="move-in inspection">move-in inspection</option><option value="move-out inspection">move-out inspection</option><option value="routine inspection">routine inspection</option><option value="annual inspection">annual inspection</option><option value="emergency assessment">emergency assessment</option></select> that revealed <select onchange="updatePromptText()"><option value="">FINDINGS SUMMARY</option><option value="excellent condition">excellent condition</option><option value="minor issues">minor issues</option><option value="significant concerns">significant concerns</option><option value="safety hazards">safety hazards</option></select>. The immediate actions required include <select onchange="updatePromptText()"><option value="">REQUIRED ACTIONS</option><option value="routine maintenance">routine maintenance</option><option value="immediate repairs">immediate repairs</option><option value="tenant notification">tenant notification</option><option value="code compliance">code compliance</option></select> following <select onchange="updatePromptText()"><option value="">DOCUMENTATION STANDARDS</option><option value="basic documentation">basic documentation</option><option value="detailed reports">detailed reports</option><option value="legal compliance">legal compliance</option><option value="insurance requirements">insurance requirements</option></select>. Include photos recommendations, follow-up timeline, and legal compliance.`,
+                    example: "Create detailed inspection report for single unit. This is a move-out inspection that revealed minor issues. The immediate actions required include routine maintenance following detailed reports."
+                },
+                {
+                    title: "🚨 Incident Documentation",
+                    description: "Document accidents, emergencies, or unusual incidents for legal protection",
+                    prompt: `Document incident report for <select onchange="updatePromptText()"><option value="">INCIDENT TYPE</option><option value="accident or injury">accident or injury</option><option value="property damage">property damage</option><option value="security breach">security breach</option><option value="emergency situation">emergency situation</option></select>. This was a <select onchange="updatePromptText()"><option value="">INCIDENT DETAILS</option><option value="witnessed event">witnessed event</option><option value="reported incident">reported incident</option><option value="discovered damage">discovered damage</option><option value="ongoing situation">ongoing situation</option></select> involving <select onchange="updatePromptText()"><option value="">AFFECTED PARTIES</option><option value="tenant injury">tenant injury</option><option value="visitor accident">visitor accident</option><option value="property damage">property damage</option><option value="multiple parties">multiple parties</option></select>. My immediate response included <select onchange="updatePromptText()"><option value="">RESPONSE ACTIONS</option><option value="medical assistance">medical assistance</option><option value="emergency services">emergency services</option><option value="temporary repairs">temporary repairs</option><option value="area secured">area secured</option></select> and the legal considerations involve <select onchange="updatePromptText()"><option value="">LEGAL CONSIDERATIONS</option><option value="potential lawsuit">potential lawsuit</option><option value="insurance claim">insurance claim</option><option value="code violation">code violation</option><option value="safety compliance">safety compliance</option></select>. Create comprehensive report for insurance and legal protection.`,
+                    example: "Document incident report for accident or injury. This was a witnessed event involving tenant injury. My immediate response included medical assistance and the legal considerations involve insurance claim."
+                },
+                {
+                    title: "💼 Owner Financial Reports",
+                    description: "Prepare detailed financial reports for property owners and investors",
+                    prompt: `Prepare financial report for <select onchange="updatePromptText()"><option value="">PROPERTY TYPE</option><option value="single property">single property</option><option value="multi-unit building">multi-unit building</option><option value="property portfolio">property portfolio</option><option value="commercial property">commercial property</option></select> covering the <select onchange="updatePromptText()"><option value="">REPORTING PERIOD</option><option value="monthly report">monthly report</option><option value="quarterly report">quarterly report</option><option value="annual summary">annual summary</option><option value="year-to-date">year-to-date</option></select>. The income summary shows <select onchange="updatePromptText()"><option value="">INCOME STATUS</option><option value="full collections">full collections</option><option value="some vacancies">some vacancies</option><option value="collection issues">collection issues</option><option value="rent increases">rent increases</option></select> while expenses included <select onchange="updatePromptText()"><option value="">EXPENSE CATEGORY</option><option value="maintenance heavy">maintenance heavy</option><option value="normal expenses">normal expenses</option><option value="capital improvements">capital improvements</option><option value="emergency repairs">emergency repairs</option></select>. Overall performance is <select onchange="updatePromptText()"><option value="">PERFORMANCE ANALYSIS</option><option value="meeting budget">meeting budget</option><option value="over budget">over budget</option><option value="exceeding expectations">exceeding expectations</option><option value="areas of concern">showing areas of concern</option></select>. Format as professional executive summary with clear action items.`,
+                    example: "Prepare financial report for single property covering the monthly report. The income summary shows full collections while expenses included normal expenses. Overall performance is meeting budget."
+                },
+                {
+                    title: "🔍 Compliance Documentation",
+                    description: "Create and maintain required compliance and safety documentation",
+                    prompt: `Create compliance documentation for <select onchange="updatePromptText()"><option value="">REGULATION TYPE</option><option value="fire safety">fire safety</option><option value="housing codes">housing codes</option><option value="accessibility compliance">accessibility compliance</option><option value="environmental regulations">environmental regulations</option></select>. Our current status is <select onchange="updatePromptText()"><option value="">COMPLIANCE STATUS</option><option value="fully compliant">fully compliant</option><option value="minor deficiencies">minor deficiencies exist</option><option value="major updates needed">major updates needed</option><option value="urgent action required">urgent action required</option></select> and requires <select onchange="updatePromptText()"><option value="">REQUIRED UPDATES</option><option value="documentation only">documentation only</option><option value="minor corrections">minor corrections</option><option value="system upgrades">system upgrades</option><option value="major renovations">major renovations</option></select> to be completed within <select onchange="updatePromptText()"><option value="">COMPLIANCE DEADLINE</option><option value="immediate deadline">immediate deadline</option><option value="30 days">30 days</option><option value="90 days">90 days</option><option value="annual requirement">annual requirement</option></select>. Record keeping must include <select onchange="updatePromptText()"><option value="">DOCUMENTATION NEEDS</option><option value="certificates required">certificates required</option><option value="inspection records">inspection records</option><option value="maintenance logs">maintenance logs</option><option value="training documentation">training documentation</option></select>. Ensure full legal compliance and proper record keeping.`,
+                    example: "Create compliance documentation for fire safety. Our current status is fully compliant and requires documentation only to be completed within annual requirement. Record keeping must include certificates required."
+                }
+            ],
+            'financial': [
+                {
+                    title: "💰 Rent Collection Strategy",
+                    description: "Develop effective strategies for collecting delinquent rent payments",
+                    prompt: `Develop rent collection strategy for a <select onchange="updatePromptText()"><option value="">TENANT CATEGORY</option><option value="first-time late payer">first-time late payer</option><option value="occasionally late">occasionally late</option><option value="chronically delinquent">chronically delinquent</option><option value="hardship situation">hardship situation</option></select> who owes <select onchange="updatePromptText()"><option value="">DEBT LEVEL</option><option value="partial payment">partial payment</option><option value="one month">one month</option><option value="multiple months">multiple months</option><option value="significant debt">significant debt</option></select>. Their payment history shows <select onchange="updatePromptText()"><option value="">PAYMENT PATTERN</option><option value="previously reliable">previously reliable</option><option value="inconsistent payments">inconsistent payments</option><option value="frequent issues">frequent issues</option><option value="new tenant">new tenant</option></select> and current circumstances involve <select onchange="updatePromptText()"><option value="">TENANT CIRCUMSTANCES</option><option value="temporary hardship">temporary hardship</option><option value="job loss">job loss</option><option value="family emergency">family emergency</option><option value="avoiding contact">avoiding contact</option></select>. Available legal options include <select onchange="updatePromptText()"><option value="">LEGAL ACTIONS</option><option value="payment plan">payment plan</option><option value="late fees">late fees</option><option value="legal notice">legal notice</option><option value="eviction process">eviction process</option></select>. Provide step-by-step collection process with timelines and legal compliance.`,
+                    example: "Develop rent collection strategy for a first-time late payer who owes one month. Their payment history shows previously reliable and current circumstances involve temporary hardship. Available legal options include payment plan."
+                },
+                {
+                    title: "🏛️ Eviction Process Management",
+                    description: "Navigate the legal eviction process with proper documentation and procedures",
+                    prompt: `Guide eviction process for <select onchange="updatePromptText()"><option value="">EVICTION TYPE</option><option value="non-payment">non-payment</option><option value="lease violation">lease violation</option><option value="no-cause termination">no-cause termination</option><option value="holdover tenant">holdover tenant</option></select>. The grounds for eviction include <select onchange="updatePromptText()"><option value="">LEGAL GROUNDS</option><option value="rent non-payment">rent non-payment</option><option value="property damage">property damage</option><option value="illegal activity">illegal activity</option><option value="lease breach">lease breach</option></select> and I have completed <select onchange="updatePromptText()"><option value="">DOCUMENTATION STATUS</option><option value="initial notice">initial notice</option><option value="cure or quit">cure or quit</option><option value="unlawful detainer">unlawful detainer</option><option value="court filing">court filing</option></select>. We are currently in the <select onchange="updatePromptText()"><option value="">LEGAL TIMELINE</option><option value="notice period">notice period</option><option value="court filing">court filing</option><option value="hearing scheduled">hearing scheduled</option><option value="judgment phase">judgment phase</option></select> stage and the next steps involve <select onchange="updatePromptText()"><option value="">NEXT ACTIONS</option><option value="serve notices">serve notices</option><option value="file paperwork">file paperwork</option><option value="attend hearing">attend hearing</option><option value="enforcement">enforcement</option></select>. Ensure full legal compliance and proper documentation throughout process.`,
+                    example: "Guide eviction process for non-payment. The grounds for eviction include rent non-payment and I have completed initial notice. We are currently in the notice period stage and the next steps involve serve notices."
+                },
+                {
+                    title: "🔐 Security Deposit Management",
+                    description: "Handle security deposits fairly and in compliance with state laws",
+                    prompt: `Handle security deposit return for a unit in <select onchange="updatePromptText()"><option value="">UNIT CONDITION</option><option value="excellent condition">excellent condition</option><option value="normal wear">normal wear</option><option value="minor damage">minor damage</option><option value="significant damage">significant damage</option></select>. The original deposit was a <select onchange="updatePromptText()"><option value="">DEPOSIT TYPE</option><option value="standard deposit">standard deposit</option><option value="large deposit">large deposit</option><option value="pet deposit included">pet deposit included</option><option value="last month included">last month included</option></select> and the move-out condition was <select onchange="updatePromptText()"><option value="">CONDITION ASSESSMENT</option><option value="better than expected">better than expected</option><option value="as expected">as expected</option><option value="worse than expected">worse than expected</option><option value="major issues">major issues</option></select>. Damages identified include <select onchange="updatePromptText()"><option value="">DAMAGE TYPES</option><option value="cleaning needed">cleaning needed</option><option value="minor repairs">minor repairs</option><option value="major repairs">major repairs</option><option value="replacement required">replacement required</option></select> and state requirements mandate <select onchange="updatePromptText()"><option value="">STATE REQUIREMENTS</option><option value="itemized list">itemized list</option><option value="photos required">photos required</option><option value="timeline compliance">timeline compliance</option><option value="interest calculation">interest calculation</option></select>. Calculate fair return amount and provide proper legal documentation.`,
+                    example: "Handle security deposit return for a unit in normal wear. The original deposit was a standard deposit and the move-out condition was as expected. Damages identified include cleaning needed and state requirements mandate itemized list."
+                },
+                {
+                    title: "📊 Budget Planning and Analysis",
+                    description: "Create comprehensive budgets and analyze financial performance",
+                    prompt: `Create budget analysis for <select onchange="updatePromptText()"><option value="">PROPERTY SCOPE</option><option value="single property">single property</option><option value="multi-unit building">multi-unit building</option><option value="property portfolio">property portfolio</option><option value="new acquisition">new acquisition</option></select>. Current performance shows <select onchange="updatePromptText()"><option value="">PERFORMANCE STATUS</option><option value="meeting targets">meeting targets</option><option value="underperforming">underperforming</option><option value="exceeding expectations">exceeding expectations</option><option value="mixed results">mixed results</option></select> while market trends indicate <select onchange="updatePromptText()"><option value="">MARKET CONDITIONS</option><option value="rising rents">rising rents</option><option value="stable market">stable market</option><option value="competitive pressure">competitive pressure</option><option value="declining market">declining market</option></select>. Planned improvements include <select onchange="updatePromptText()"><option value="">CAPITAL PROJECTS</option><option value="routine maintenance">routine maintenance</option><option value="major renovations">major renovations</option><option value="emergency reserves">emergency reserves</option><option value="improvements">improvements</option></select> with financial goals to <select onchange="updatePromptText()"><option value="">PROFIT OBJECTIVES</option><option value="maintain current">maintain current</option><option value="increase profit">increase profit</option><option value="break-even focus">break-even focus</option><option value="long-term growth">long-term growth</option></select>. Develop realistic budget with projections and variance analysis.`,
+                    example: "Create budget analysis for single property. Current performance shows meeting targets while market trends indicate stable market. Planned improvements include routine maintenance with financial goals to maintain current."
+                }
+            ],
+            'phone': [
+                {
+                    title: "📞 Difficult Tenant Conversations",
+                    description: "Handle challenging phone calls with upset or uncooperative tenants",
+                    prompt: `Prepare for difficult call with tenant who is <select onchange="updatePromptText()"><option value="">TENANT ATTITUDE</option><option value="angry about increases">angry about increases</option><option value="avoiding rent payment">avoiding rent payment</option><option value="demanding repairs">demanding repairs</option><option value="threatening to leave">threatening to leave</option></select>. My call objective is to <select onchange="updatePromptText()"><option value="">CALL PURPOSE</option><option value="collect rent">collect rent</option><option value="discuss violation">discuss violation</option><option value="explain policy">explain policy</option><option value="negotiate solution">negotiate solution</option></select> while anticipating <select onchange="updatePromptText()"><option value="">EXPECTED CHALLENGES</option><option value="emotional response">emotional response</option><option value="legal threats">legal threats</option><option value="blame shifting">blame shifting</option><option value="unreasonable demands">unreasonable demands</option></select>. Key talking points must cover <select onchange="updatePromptText()"><option value="">DISCUSSION TOPICS</option><option value="policy enforcement">policy enforcement</option><option value="legal requirements">legal requirements</option><option value="available options">available options</option><option value="consequences">consequences</option></select> with the desired outcome being <select onchange="updatePromptText()"><option value="">SUCCESS GOAL</option><option value="payment arrangement">payment arrangement</option><option value="compliance agreement">compliance agreement</option><option value="peaceful resolution">peaceful resolution</option><option value="relationship preserved">relationship preserved</option></select>. Provide professional scripts and de-escalation techniques.`,
+                    example: "Prepare for difficult call with tenant who is angry about increases. My call objective is to explain policy while anticipating emotional response. Key talking points must cover policy enforcement with the desired outcome being peaceful resolution."
+                },
+                {
+                    title: "🔨 Vendor Negotiation Scripts",
+                    description: "Script effective negotiations with contractors and service providers",
+                    prompt: `Script vendor negotiation for <select onchange="updatePromptText()"><option value="">SERVICE CATEGORY</option><option value="emergency repair">emergency repair</option><option value="routine maintenance">routine maintenance</option><option value="major project">major project</option><option value="ongoing service">ongoing service</option></select>. Their current quote is <select onchange="updatePromptText()"><option value="">QUOTE ASSESSMENT</option><option value="higher than expected">higher than expected</option><option value="multiple quotes">multiple quotes</option><option value="sole source">sole source</option><option value="preferred vendor">preferred vendor</option></select> while my budget constraints involve <select onchange="updatePromptText()"><option value="">BUDGET SITUATION</option><option value="tight budget">tight budget</option><option value="competitive pricing">competitive pricing</option><option value="quality focused">quality focused</option><option value="emergency pricing">emergency pricing</option></select>. My negotiation leverage includes <select onchange="updatePromptText()"><option value="">NEGOTIATION ADVANTAGES</option><option value="repeat customer">repeat customer</option><option value="multiple properties">multiple properties</option><option value="quick payment">quick payment</option><option value="referral potential">referral potential</option></select> and alternative options are <select onchange="updatePromptText()"><option value="">BACKUP PLANS</option><option value="other contractors">other contractors</option><option value="delayed timing">delayed timing</option><option value="alternative solutions">alternative solutions</option><option value="different scope">different scope</option></select>. Develop persuasive negotiation strategy with specific talking points.`,
+                    example: "Script vendor negotiation for emergency repair. Their current quote is higher than expected while my budget constraints involve tight budget. My negotiation leverage includes repeat customer and alternative options are other contractors."
+                },
+                {
+                    title: "🚨 Emergency Response Coordination",
+                    description: "Coordinate multiple parties during property emergencies via phone",
+                    prompt: `Coordinate emergency response for <select onchange="updatePromptText()"><option value="">EMERGENCY TYPE</option><option value="fire or smoke">fire or smoke</option><option value="water damage">water damage</option><option value="gas leak">gas leak</option><option value="security breach">security breach</option><option value="structural damage">structural damage</option></select>. Immediate priorities include <select onchange="updatePromptText()"><option value="">CRITICAL ACTIONS</option><option value="ensure safety">ensure safety</option><option value="stop damage">stop damage</option><option value="notify authorities">notify authorities</option><option value="document incident">document incident</option></select> while key contacts are <select onchange="updatePromptText()"><option value="">CONTACT PRIORITIES</option><option value="emergency services">emergency services</option><option value="property owner">property owner</option><option value="insurance company">insurance company</option><option value="affected tenants">affected tenants</option></select>. Essential information to gather includes <select onchange="updatePromptText()"><option value="">INFORMATION NEEDS</option><option value="extent of damage">extent of damage</option><option value="people affected">people affected</option><option value="immediate needs">immediate needs</option><option value="access requirements">access requirements</option></select> following the communication sequence of <select onchange="updatePromptText()"><option value="">CALL ORDER</option><option value="emergency first">emergency first</option><option value="owner notification">owner notification</option><option value="insurance report">insurance report</option><option value="tenant updates">tenant updates</option></select>. Provide systematic response protocol and communication scripts.`,
+                    example: "Coordinate emergency response for water damage. Immediate priorities include stop damage while key contacts are emergency services. Essential information to gather includes extent of damage following the communication sequence of emergency first."
+                },
+                {
+                    title: "💰 Rent Collection Calls",
+                    description: "Professional scripts for collecting overdue rent payments",
+                    prompt: `Script rent collection call for tenant with <select onchange="updatePromptText()"><option value="">TENANT PROFILE</option><option value="usually reliable">usually reliable</option><option value="mixed history">mixed history</option><option value="chronic problems">chronic problems</option><option value="new tenant">new tenant</option></select> payment history who owes <select onchange="updatePromptText()"><option value="">DEBT DETAILS</option><option value="just overdue">just overdue</option><option value="multiple months">multiple months</option><option value="with late fees">with late fees</option><option value="partial payments">partial payments</option></select>. This tenant's payment pattern shows <select onchange="updatePromptText()"><option value="">PAYMENT PATTERN</option><option value="first time late">first time late</option><option value="occasional issues">occasional issues</option><option value="frequent problems">frequent problems</option><option value="good history">good history</option></select> and hardship factors include <select onchange="updatePromptText()"><option value="">CIRCUMSTANCES</option><option value="job loss">job loss</option><option value="family emergency">family emergency</option><option value="medical bills">medical bills</option><option value="avoiding contact">avoiding contact</option></select>. My collection approach will be <select onchange="updatePromptText()"><option value="">COLLECTION STRATEGY</option><option value="payment plan">payment plan</option><option value="hardship program">hardship program</option><option value="legal action">legal action</option><option value="immediate payment">immediate payment</option></select>. Provide empathetic but firm collection approach with clear expectations.`,
+                    example: "Script rent collection call for tenant with usually reliable payment history who owes just overdue. This tenant's payment pattern shows first time late and hardship factors include job loss. My collection approach will be payment plan."
+                }
+            ]
+        };
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        function showCategory(categoryId) {
+            showSection(categoryId);
+            loadCategoryPrompts(categoryId);
+        }
+
+        function loadCategoryPrompts(categoryId) {
+            const content = document.getElementById(categoryId + '-content');
+            content.innerHTML = propertyPrompts[categoryId].map((prompt, index) => `
+                <div class="prompt-item" onclick="openModal('${categoryId}', ${index})">
+                    <div class="prompt-item-title">${prompt.title}</div>
+                    <div class="prompt-item-description">${prompt.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(categoryId, promptIndex) {
+            const prompt = propertyPrompts[categoryId][promptIndex];
+            document.getElementById('modalTitle').textContent = prompt.title;
+            document.getElementById('modalPromptText').innerHTML = prompt.prompt;
+            document.getElementById('modalExample').innerHTML = '<strong>Example:</strong> ' + prompt.example;
+            updatePromptText();
+            document.getElementById('promptModal').style.display = 'block';
+        }
+
+        function updatePromptText() {
+            // Get all select elements in the modal
+            const selects = document.querySelectorAll('#modalPromptText select');
+            let promptText = document.getElementById('modalPromptText').innerHTML;
+            
+            // Extract text content and replace selects with their values
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = promptText;
+            
+            const selectElements = tempDiv.querySelectorAll('select');
+            selectElements.forEach(select => {
+                if (select.value) {
+                    select.outerHTML = select.value;
+                }
+            });
+            
+            currentPromptText = tempDiv.textContent || tempDiv.innerText;
+        }
+
+        function closeModal() {
+            document.getElementById('promptModal').style.display = 'none';
+            document.getElementById('modalSuccessMessage').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('promptModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        async function copyModalPrompt() {
+            updatePromptText();
+            
+            if (!currentPromptText || currentPromptText.trim().length === 0) {
+                alert('Please make selections from the dropdown menus in the prompt first.');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(currentPromptText);
+                
+                const successMsg = document.getElementById('modalSuccessMessage');
+                successMsg.style.display = 'block';
+                
+                const copyBtn = document.querySelector('.copy-button-modal');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                    copyBtn.textContent = originalText;
+                }, 2000);
+                
+            } catch (err) {
+                alert('Unable to copy automatically. Please select and copy the text manually.');
+            }
+        }
+
+        function openChatGPT() {
+            window.open('https://chatgpt.com/', '_blank');
+        }
+        
+        function openClaude() {
+            window.open('https://claude.ai/login?returnTo=%2F%3F', '_blank');
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('home');
+        });
+    </script>
+</body>
+</html>
